@@ -1,0 +1,10 @@
+^\.github$
+^\.gitignore$
+^LICENSE\.md$
+^cran-comments\.md$
+^VALIDATION\.md$
+^tools$
+^OECDdata\.Rproj$
+^.*\.Rcheck$
+^CONTRIBUTING\.md$
+^\.qa$

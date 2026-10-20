@@ -1,0 +1,73 @@
+name: R-CMD-check
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    name: ${{ matrix.config.os }} (R ${{ matrix.config.r }})
+    timeout-minutes: 30
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {os: windows-latest, r: release}
+          - {os: macos-latest, r: release}
+          - {os: ubuntu-latest, r: release}
+          - {os: ubuntu-latest, r: oldrel-1}
+          - {os: ubuntu-latest, r: devel}
+          - {os: ubuntu-22.04, r: '4.1.3'}
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+      OECDDATA_LIVE_TESTS: 'false'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: r-lib/actions/setup-pandoc@v2
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.config.r }}
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          args: 'c("--as-cran", "--no-manual")'
+          upload-results: true
+          error-on: '"warning"'
+  full-manual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      OECDDATA_LIVE_TESTS: 'false'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: r-lib/actions/setup-pandoc@v2
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+      - name: Install manual prerequisites
+        run: sudo apt-get update && sudo apt-get install -y texlive-latex-extra texlive-fonts-extra qpdf
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          needs: check
+      - name: Verify the PDF manual is produced
+        run: |
+          mkdir -p .qa
+          R CMD Rd2pdf --no-preview --output=.qa/OECDdata-manual.pdf .
+          test -s .qa/OECDdata-manual.pdf
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          args: 'c("--as-cran")'
+          build_args: 'character()'
+          upload-results: true
+          artifact-name: full-manual-result
+          error-on: '"warning"'

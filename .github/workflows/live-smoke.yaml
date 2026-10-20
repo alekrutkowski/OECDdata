@@ -1,0 +1,23 @@
+name: Manual OECD live smoke test
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      OECDDATA_LIVE_TESTS: 'true'
+    steps:
+      - uses: actions/checkout@v6
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          needs: check
+      - name: Run one deliberately small live selection
+        shell: Rscript {0}
+        run: testthat::test_local(filter = "live", stop_on_failure = TRUE)

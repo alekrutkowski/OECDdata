@@ -1,0 +1,187 @@
+---
+title: "OECDdata: discovery, careful selection, and reproducible analysis"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{OECDdata: discovery, careful selection, and reproducible analysis}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(OECDdata)
+library(data.table)
+library(magrittr)
+old <- oecdOptions(quiet = TRUE, open_browser = FALSE,
+                   return_data_table = TRUE, strings_as_factors = FALSE)
+```
+
+## A reliable workflow
+
+Discover a dataflow, inspect its dimensions and dictionaries, restrict the
+request, inspect status and units, and only then calculate statistics. The
+`eurodata` package inspires the workflow, but names, classes and identities
+are OECD-native.
+The default route is SDMX REST v2. See the package README for current protocol
+references and a detailed interface and migration guide.
+
+All evaluated chunks in this vignette are offline. The following object contains
+invented teaching observations, not actual OECD statistics.
+
+```{r example}
+x <- oecdExample()
+x[, .(REF_AREA, TIME_PERIOD, value_, flags_)]
+```
+
+## Observations, dimensions and attributes
+
+```{r structure}
+attr(x, "Dimensions")
+attr(x, "OECDAttributes")
+str(x)
+```
+
+`value_` is numeric. Dimension codes remain strings or, with the default options,
+factors. Numeric-looking identifiers retain leading zeros. `flags_` preserves
+`OBS_STATUS` without translating it into another provider's status vocabulary.
+The original attribute is retained too.
+
+```{r audit}
+series_keys <- setdiff(attr(x, "Dimensions"), "TIME_PERIOD")
+x[, .(observations = .N, missing = sum(is.na(value_))), by = series_keys]
+x[, .N, by = OBS_STATUS]
+```
+
+An incomplete series is not automatically filled with zeros. An attribute such
+as `UNIT_MULT` is not automatically applied: verify whether the reported value
+and the unit metadata require scaling in your analysis.
+
+## Safe reshaping and plotting
+
+This synthetic example contains one frequency, measure and group per country.
+Check that simplification before dropping those columns.
+
+```{r pivot}
+stopifnot(x[, uniqueN(FREQ)] == 1L, x[, uniqueN(MEASURE)] == 1L,
+          x[, uniqueN(GROUP)] == 1L,
+          !anyDuplicated(x, by = c("TIME_PERIOD", "REF_AREA")))
+dcast(x, TIME_PERIOD ~ REF_AREA, value.var = "value_")
+```
+
+```{r plot, fig.width=6.5, fig.height=3.5}
+one <- x[REF_AREA == "USA"][order(TIME_PERIOD)]
+plot(as.Date(paste0(one$TIME_PERIOD, "-01")), one$value_, type = "l",
+     xlab = "Month", ylab = "Synthetic index", main = "Invented example")
+```
+
+## An adjacent-period change
+
+Sorting is necessary but not sufficient. Check that observations are exactly one
+month apart, so a gap is not misinterpreted as one month's growth.
+
+```{r growth}
+copy(x) %>%
+  .[, month_id := as.integer(substr(TIME_PERIOD, 1, 4)) * 12L +
+                  as.integer(substr(TIME_PERIOD, 6, 7))] %>%
+  .[order(month_id), `:=`(previous = shift(value_),
+                        previous_month = shift(month_id)), by = series_keys] %>%
+  .[, growth_pct := fifelse(!is.na(previous) & previous != 0 &
+                             month_id - previous_month == 1L,
+                           100 * (value_ / previous - 1), NA_real_)] %>%
+  .[, .(REF_AREA, TIME_PERIOD, growth_pct)]
+```
+
+## Discovery and metadata (online, not evaluated)
+
+```{r discovery, eval=FALSE}
+OECDdata::find("health expenditure")
+OECDdata::find(education, expenditure)
+browseDataList(grepl("employment", `Dataset name`, ignore.case = TRUE))
+
+code <- "CLI"
+s <- oecdStructure(code)
+s$flow
+s$dimensions
+s$labels$REF_AREA
+importLabels("REF_AREA", dataset = code)
+describe(code, wide = TRUE)
+```
+
+A codelist describes permissible values. An Actual content constraint can
+establish reported marginal availability, but not that every combination of
+values is observed. `describe()` and `importMetabase()` fail explicitly when
+that coverage cannot be established. `availability = "allowed"` is an explicit
+alternative for dictionary-based inventories, not a substitute presented as
+observed coverage.
+
+## Short codes and dataset identity (online, not evaluated)
+
+A short code is matched against the current catalogue, not a hard-coded alias
+list. Ambiguity is an error. Agency and dataflow-prefix selectors can resolve it
+without making the dataset code harder to read. Resolve once for reuse:
+
+```{r resolve, eval=FALSE}
+ref <- oecdDataset("CLI", agency = "OECD.SDD.STES", prefix = "DSD_STES")
+ref
+importLabels(OECDDimCode = "REF_AREA", dataset = ref)
+
+# A query preview fetches metadata but does not download observations.
+oecdQuery("CLI", filters = list(
+  .dataset = list(agency = "OECD.SDD.STES", prefix = "DSD_STES"),
+  REF_AREA = "USA", FREQ = "M", TIME_PERIOD = c("2023-01", "2023-12")
+))
+```
+
+The reserved `.dataset` block selects agency, dataflow namespace and/or version;
+it is not a set of series dimensions. `prefix` matches the dataflow ID prefix
+before `@`. The actual referenced DSD is read from the server metadata. All other
+filter entries retain their ordinary dimension semantics. A selector-only block
+leaves all observations unrestricted. A qualified reference avoids the catalogue
+lookup, and explicit selector/reference conflicts are errors.
+
+## A small download (online, not evaluated)
+
+```{r live, eval=FALSE}
+cli <- importData(code, list(REF_AREA = c("USA", "FRA"), FREQ = "M",
+                             TIME_PERIOD = c("2023-01", "2023-12")))
+attr(cli, "SourceURL")
+attr(cli, "OECDDatasetCode")
+```
+
+The two time bounds define an inclusive range. An unspecified dimension is a
+wildcard, so the result may include multiple measures or transformations. Never
+collapse them into a single line or aggregate solely by country and date without
+checking the other key dimensions.
+
+## Caching and provenance
+
+Requests are cached in a session temporary directory by default. Persistent
+storage is opt-in. Offline mode accepts expired but verified cache entries;
+missing or corrupt entries cause explicit errors. Cached data retain their
+original download time. A structure version is not a statistical vintage.
+
+```{r provenance}
+attributes(x)[c("RequestedDatasetCode", "OECDDatasetCode", "DownloadTime",
+                "SourceURL", "Dimensions")]
+```
+
+```{r persistent, eval=FALSE}
+oecdOptions(cache_dir = tools::R_user_dir("OECDdata", "cache"))
+# First make a successful online request with the desired metadata and filters.
+# Then use offline = TRUE with the same request.
+saveRDS(list(data = cli, provenance = attributes(cli)), "cli-snapshot.rds")
+```
+
+HTTP failures remain structured errors. HTTP 204 is an explicit empty result
+with a warning. The client never converts an arbitrary 404 or malformed response
+into an apparently successful empty dataset.
+
+## Restore session settings
+
+```{r restore, include=FALSE}
+options(old)
+```
+
+Use `old <- oecdOptions(...)` with `on.exit(options(old))` inside your own
+functions to keep option changes local. The package itself does not change
+options at load time.

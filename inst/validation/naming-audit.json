@@ -1,0 +1,19 @@
+{
+  "status": "PASS",
+  "review_date": "2026-10-20",
+  "runtime_help_tests_exports_foreign_provider_references": 0,
+  "intentional_upstream_reference_files": [
+    {
+      "file": "README.md"
+    },
+    {
+      "file": "tools/check-api.R"
+    }
+  ],
+  "workflow_yaml_parsed": [
+    "live-smoke.yaml",
+    "R-CMD-check.yaml",
+    "checktor.yaml"
+  ],
+  "scope": "Runtime/help/test naming audit and YAML parsing. GitHub Actions jobs have not been executed."
+}
