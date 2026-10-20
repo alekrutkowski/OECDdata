@@ -13,21 +13,6 @@ parsed by the native `data.table::fread()` implementation. The client resolves
 metadata before building queries, preserves observation attributes, caches raw
 responses with checksums, and handles retries and rate limits explicitly.
 
-**Release status:** version 0.2.5 was audited on Windows with R 4.6.1 on
-20 October 2026. The offline suite passes 347 assertions, and checktor 0.2.0
-reports no findings, including spelling. Fresh REST v1 and v2 responses agree
-on all 32 observations in the small comparison selection. The remaining
-release gates are a working PDF-manual build, remote CRAN/URL checks, and
-execution of the supplied multi-platform GitHub workflows.
-See [VALIDATION.md](inst/VALIDATION.md) for the measured results and limitations.
-Build the submission archive with `R CMD build` or `tools/check.R`; do not submit
-a manually assembled source archive.
-
-The public API contract was reviewed on **16 October 2026**. OECD's documented
-REST v2 routes and SDMX message formats are separate version choices: this
-package uses REST v2 with CSV 2 observations and XML 2.1 structures. It does not
-use the retired OECD.Stat API. See [official sources](#official-sources).
-
 ## Installation
 
 Requires R 4.1.0 or newer. This is a local source release, not a claim that
@@ -43,15 +28,6 @@ From an extracted development directory:
 ```sh
 R CMD INSTALL OECDdata
 ```
-
-There is no package-owned C++ toolchain requirement. Performance-critical work
-uses native code in dependencies. Building dependencies from source can still
-require their normal system libraries and compilers. The development ZIP also
-contains the scripts and GitHub Actions workflows excluded from the R package.
-
-For complete coverage reports on development machines, optionally install
-`covr` once with `install.packages("covr")`. It is not a runtime dependency and
-its absence does not imply a faulty package installation.
 
 For a complete R Markdown vignette build, the build machine also needs Pandoc.
 On Windows, install it from [pandoc.org](https://pandoc.org/installing.html),
@@ -940,7 +916,7 @@ Copyright (c) 2026 Alek Rutkowski. Package-owned code, documentation and synthet
 fixtures are under the **MIT license**. See [LICENSE.md](inst/LICENSE.md).
 
 The interface is inspired by and independently implemented against
-[`eurodata`](https://cran.r-project.org/package=eurodata), by Aleksander Rutkowski.
+[`eurodata`](https://cran.r-project.org/package=eurodata).
 Its upstream source is GPL-2; no GPL implementation code is bundled or copied
 into this MIT package. Shared workflow conventions and selected semantics are
 adapted to OECD with attribution.
