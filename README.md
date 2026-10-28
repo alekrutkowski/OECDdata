@@ -8,8 +8,9 @@ public OECD SDMX API. Its workflow is inspired by `eurodata` 1.8.0, including
 and metadata are OECD-native. Readable short codes hide SDMX identity details
 when the catalogue can resolve them safely.
 
-The default transport is **SDMX REST v2**. Downloads go directly to disk and are
-parsed by the native `data.table::fread()` implementation. The client resolves
+The default transport is **SDMX REST v2**. Downloads go directly to disk. XML
+metadata are indexed and extracted in C using libxml2; observations are parsed
+by the native `data.table::fread()` implementation. The client resolves
 metadata before building queries, preserves observation attributes, caches raw
 responses with checksums, and handles retries and rate limits explicitly.
 
@@ -20,7 +21,7 @@ Requires R 4.1.0 or newer. This is a local source release, not a claim that
 
 ```r
 install.packages(c("curl", "data.table", "digest", "magrittr", "xml2"))
-install.packages("OECDdata_0.2.5.tar.gz", repos = NULL, type = "source")
+install.packages("OECDdata_0.3.1.tar.gz", repos = NULL, type = "source")
 ```
 
 From an extracted development directory:
@@ -28,6 +29,38 @@ From an extracted development directory:
 ```sh
 R CMD INSTALL OECDdata
 ```
+
+Source installation now compiles C code and requires **libxml2 2.9.0 or newer**.
+On Windows, install the complete [Rtools version matching R](https://cran.r-project.org/bin/windows/Rtools/).
+For R 4.2 and later, its bundled libxml2 is detected through R's selected
+toolchain; `pkg-config` is optional. The older R 4.1/Rtools40 combination needs
+its additional libxml2 package, installed in the **Rtools40 shell** with
+`pacman -S mingw-w64-x86_64-libxml2` for 64-bit R (or the `i686` package for
+32-bit R). See the [Rtools40 documentation](https://github.com/r-windows/docs/blob/master/rtools40.md).
+On Ubuntu or Debian:
+
+```sh
+sudo apt-get install r-base-dev libxml2-dev pkg-config
+```
+
+Unix configuration discovers libxml2 with `pkg-config` or `xml2-config`.
+Custom locations can be supplied through `LIBXML_CFLAGS` and `LIBXML_LIBS`, or
+`INCLUDE_DIR` and `LIB_DIR`. Windows configuration first tries the matching
+toolchain's `pkg-config` and then its headers and static libraries directly,
+including the required static dependencies. Both routes must pass a compile
+and link probe with the active R compiler. `PKG_CONFIG` can select a custom
+pkg-config executable. No Rcpp dependency or downloaded build-time source is
+needed.
+
+The repository includes a native-binary release workflow for Windows, Ubuntu
+24.04 and macOS 15, each on x86_64 and ARM64. A matching version tag such as
+`v0.3.1` publishes the source archive and all six binaries only after their
+checks pass. A manual branch run produces Actions artifacts. These are workflow
+configurations, not a claim that binaries have already been published.
+Choose a binary matching the operating system, **R architecture** and R minor
+version in its filename. Windows ARM64 uses the community-maintained ARM64 R
+distribution; Ubuntu binaries target Ubuntu 24.04 rather than every Linux
+distribution. See [native release documentation](inst/PERFORMANCE.md).
 
 For a complete R Markdown vignette build, the build machine also needs Pandoc.
 On Windows, install it from [pandoc.org](https://pandoc.org/installing.html),
@@ -788,13 +821,42 @@ two flows does not by itself establish that their concepts or units are comparab
 
 ## 13. Performance and development
 
-The implementation uses native CSV parsing, in-place `data.table` column
-updates, reference-aware XML parsing, full request caching and server-side
-selection. It does not duplicate the entire response as a single R character
-string. Numeric measures are converted once; dimension identifiers are not
-inferred as numbers. No benchmark speedup is asserted without measurements.
+The metadata path now uses a package-owned C extension over libxml2. Catalogue
+and dictionary extraction fill complete character columns in bulk. Each
+document indexes dataflows, DSDs, codelists, concept schemes and constraints
+once. This removes the former per-code R/XPath callbacks, per-flow one-row
+tables, and repeated whole-document searches for these definitions. Catalogue
+version selection also avoids constructing a separate `.SD` table per flow.
 
-Run the reproducible **offline parser-component benchmark** after installation:
+`importData("CLI", ...)` resolves its short code through the catalogue, so the
+catalogue improvement benefits both `importDataList()` and `importData()`.
+CSV parsing still uses `fread()`. Metadata validation, filters, classes,
+attributes, language fallback and raw-response cache semantics are preserved.
+Production XML is read directly from the downloaded file; it is not copied to
+one R character string. `xml2` remains available for HTML handling and editing
+test fixtures. Native code owns its documents independently of xml2 internals.
+
+Measured file-read-plus-parse timings on identical real OECD responses,
+downloaded on 28 October 2026, are recorded in
+[the performance report](inst/PERFORMANCE.md). The report separates XML
+processing from downloads and complete cached public imports, and includes
+the environment, repetitions and equality checks.
+
+Run the reproducible **offline XML benchmark** after installation:
+
+```r
+source(system.file("benchmarks", "xml.R", package = "OECDdata"))
+```
+
+It compares the frozen, byte-compiled 0.2.5 XML machinery with the new C path
+on generated catalogue and structure files. It checks result parity before
+timing three repetitions and reports CPU time, elapsed time, input sizes,
+SHA-256 hashes, output sizes and thread settings. Supply existing downloaded
+metadata instead with `OECDDATA_BENCH_CATALOGUE`, `OECDDATA_BENCH_STRUCTURE` and
+`OECDDATA_BENCH_REFERENCE`; see the script header for all controls. No network
+requests are made, and the previous thread setting is restored afterward.
+
+The separate **offline CSV parser benchmark** remains available:
 
 ```r
 source(system.file("benchmarks", "parser.R", package = "OECDdata"))
@@ -921,8 +983,11 @@ Its upstream source is GPL-2; no GPL implementation code is bundled or copied
 into this MIT package. Shared workflow conventions and selected semantics are
 adapted to OECD with attribution.
 
-Runtime dependencies are `curl`, `data.table`, `digest`, `magrittr`, `xml2` and
-R's `utils`. Development dependencies are `testthat`, `withr`, `knitr` and
+Runtime dependencies are `curl`, `data.table`, `digest`, `magrittr`, `xml2`,
+R's `utils`, and the native **libxml2** library, maintained by the GNOME libxml2
+contributors under its MIT license. The C extension uses libxml2's public API
+and R's native interface; no dependency implementation is vendored.
+Development dependencies are `testthat`, `withr`, `knitr` and
 `rmarkdown`; optional maintainer checks use `rcmdcheck` and an installed
 `eurodata`. Each dependency retains its own authorship and license. See
 [dependency acknowledgments](inst/ATTRIBUTION.md).

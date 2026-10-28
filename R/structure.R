@@ -103,7 +103,7 @@ importDimLabel <- function(OECDDimCode, dataset = NULL) {
     data.table::data.table(Code = rep(code, length(vals)), Dim_name = rep(d, length(vals)), Dim_val = vals)
   })
   out <- data.table::rbindlist(tables, use.names = TRUE)
-  attr(out, "Availability") <- mode
+  data.table::setattr(out, "Availability", mode)
   out
 }
 
@@ -154,7 +154,7 @@ importMetabase <- function(OECDDatasetCode = NULL) {
   order <- c("Dim_name", if (import_dim_labels) "Dim_name_label",
     if (wide) "Dim_values" else "Dim_val", if (import_labels) "Dim_val_label", code)
   data.table::setcolorder(out, order)
-  attr(out, "Availability") <- .opt("availability")
+  data.table::setattr(out, "Availability", .opt("availability"))
   out
 }
 

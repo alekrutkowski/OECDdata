@@ -1,0 +1,3 @@
+PKG_CPPFLAGS = @xml_cflags@
+PKG_CFLAGS = $(C_VISIBILITY)
+PKG_LIBS = @xml_libs@

@@ -1,99 +1,91 @@
-# OECDdata 0.2.5 validation record
+# OECDdata 0.3.1 validation record
 
-Tested on 20 October 2026, Windows 11 x64, R 4.6.1 (ucrt).
-The discovered package defects are fixed. Complete CRAN release sign-off still
-requires the outstanding checks below; this record does not claim CRAN acceptance
-or completed GitHub Actions runs.
+Executed on 28 October 2026. This patch repairs Windows source installation;
+the native XML engine, registration, XML helpers and import implementation are
+byte-for-byte identical to the delivered 0.3.0 source archive. The HTTP user
+agent now reports 0.3.1. Historical performance measurements remain explicitly
+labelled 0.3.0 in `PERFORMANCE.md`.
 
 ## Executed checks
 
 | Check | Result |
 |---|---|
-| Offline testthat suite | 347 passing assertions across 74 executed cases; zero failures, errors or warnings. One additional live case is skipped by default. |
-| New regressions | 11 cases covering 36 assertions; the original defects were reproduced before repair. |
-| `R CMD build` | Successful source archive with the rendered vignette. |
-| Windows `R CMD check --as-cran --no-manual` | Successful with remote incoming and clock verification disabled for the restricted environment; see the recorded log. |
-| checktor 0.2.0 | No policy, robustness or opinion findings; no suppressed findings. All offline checks, including spelling with Hunspell 1.7.4, executed. |
-| checktor URL liveness | Requested in the initial audit, but could not execute because R's outbound network access is blocked. Not counted as a pass. |
-| Installed package | The diagnostic runner unloads the development namespace and loads the newly installed archive before checking its public API. |
-| Real libcurl transport | Local HTTP integration passed gzip decoding, redirects, Retry-After handling, HTTP 204, HTML rejection, request headers and size enforcement. |
-| Real OECD responses | Fresh REST v1 and v2 requests via PowerShell returned identical 32-row datasets, including values and attributes. |
-| Cached integration | All seven assertions in the opt-in live test passed in strict offline mode against checksum-verified responses downloaded on 16 October 2026. |
-| API compatibility | The intended argument/default mapping to eurodata 1.8.0 passed. |
-| Offline coverage | 87.7% measured by covr 3.6.5. |
-| Parser benchmark | 120,000 synthetic rows; native and base parser results verified. Timings are retained in the diagnostic log. |
-| GitHub configuration | All three workflow YAML files parsed; jobs have not run on GitHub. |
-| Current CRAN name | No case-insensitive `OECDdata` match in the CRAN package index downloaded on 20 October 2026. This is not name reservation or approval. |
+| Configuration regression harness | 22 tests passed, including missing, broken and working pkg-config; selected-toolchain precedence; custom flags; spaces; architecture-specific R; compiler-relative and legacy root discovery; compile/link failure; stale flags; and missing headers/archives. |
+| Generated flag quoting | Verified through real GNU make and shell expansion; quoted include and library directories arrive as single compiler arguments. |
+| Actual compiler probe | Revised configure.win successfully compiled and linked its parser/XPath probe with R 4.3.3 and libxml2 2.9.14 on Linux, using explicit native Linux flags. This exercises the real R CMD SHLIB invocation, not Windows compilation. |
+| R CMD build | Passed, including the HTML vignette. |
+| R CMD check --no-manual | Status: OK, with zero errors, warnings or notes on Linux x86_64. |
+| Offline package suite | 428 passing assertions, zero failures or warnings, one opt-in network case skipped. |
+| Native code preservation | src/oecd_xml.c, src/init.c, R/xml.R and R/import.R match the delivered 0.3.0 source archive exactly. |
+| Rtools45 dependency verification | Read actual .pc files and wrapper from official Rtools45 revision 6768; confirmed libxml2 2.12.10 and its static dependency set. |
+| CI configuration | All affected YAML files parse, new R helper parses, and release publication requires the Windows source-install workflow. |
+| Static source/API audit | Passed, including all 16 public exports and documented signatures. |
 
-The fresh data requests used `format=csvfile` with PowerShell's HTTP client.
-The package's parser used the verified cached XML 2.1 metadata. This is fresh
-REST/data-format evidence, not an end-to-end fresh run of the package's R HTTPS
-transport. The recorded CSV 2 response was also exercised by cache replay.
+The configuration harness uses controlled R/pkg-config test doubles for branch
+coverage. Its make and shell quoting checks are real. No Windows executable was
+compiled or run in this session. Native Windows installation checks are supplied
+as CI jobs and remain to be executed on their runners. The package check excludes
+the PDF manual and is not a full CRAN incoming check.
 
-## Defects repaired
+## Corrected discovery behavior
 
-* Pin latest dataflow versions before asking OECD for `referencepartial`
-  references. The former wildcard request was observed returning HTTP 400;
-  dataflow-only latest resolution and the exact-version request both succeeded.
-* Return names for non-enumerated components such as `TIME_PERIOD`.
-* Honour qualified component references over default dataset options and reject
-  conflicting explicit contexts.
-* Describe actual code availability even when no codelists are enumerated.
-* Validate cache status/time fields and apply size limits to cache hits.
-* Classify libcurl size failures correctly and avoid retrying them.
-* Treat XML `false` and `0` exclusions conservatively; do not advertise excluded
-  values as observed codes.
-* Reject invalid or duplicate dimension positions and reserved component IDs.
-* Validate dataflow and DSD identities in CSV responses, including conflicting
-  identity columns.
-* Stage development source before building so Windows logs under `.qa` cannot
-  cause `R CMD build` to fail while copying the tree.
-* Verify the installed namespace and actual PDF output in release tooling;
-  fail explicitly when requested URL checks cannot execute.
+The 0.3.0 Windows script required a successful generic pkg-config lookup and
+stopped before testing available libraries when that lookup failed. The revised
+script checks R_TOOLS_SOFT and LOCAL_SOFT, including values supplied by R CMD
+config, and prefers the selected toolchain's pkg-config. If pkg-config cannot
+supply usable flags, it reads that toolchain's include and library directories
+directly. The static library set includes libxml2, available lzma/iconv/zlib
+archives, the math library and Windows sockets.
 
-## Outstanding release gates
+Older Rtools40 does not provide the modern root variables. Configuration can
+resolve its compiler-relative root or use its documented RTOOLS40_HOME layout,
+guarded by the actual running R version and pointer size. A stale RTOOLS40_HOME
+cannot select legacy MSVCRT libraries through the legacy-layout query for R 4.2
+or newer. Rtools40's optional libxml2 system package must still be installed.
 
-1. **PDF manual:** the initial `R CMD check --as-cran` summary incorrectly
-   reported the manual as OK. `Rdlatex.log` recorded a failed MiKTeX `texify`
-   command and no manual PDF was produced. MiKTeX cannot initialize its
-   configuration under this session's permissions. A portable TeX Live attempt
-   also failed on inaccessible ancestor-path information. Neither is a proven
-   package documentation error. The updated scripts explicitly require a
-   nonempty PDF; the full-manual GitHub job does the same.
-2. **Remote checks:** run CRAN incoming checks and checktor with
-   `OECDTEST_CHECKTOR_URLS=1` using working R network access. The OECD service
-   homepage was reachable through PowerShell.
-3. **Other platforms:** execute the configured Windows/macOS release and Linux
-   release, oldrel, devel and R 4.1.3 jobs. WSL was inaccessible locally.
-4. **Fresh R integration:** run the manual live workflow or the opt-in test
-   using the package's own transport.
-5. **Publication:** this directory arrived without Git metadata or a specified
-   GitHub remote. No repository was created or pushed, and nothing was submitted
-   to CRAN. The maintainer still confirms submission and licensing declarations.
+Every candidate must pass an actual compile and link probe using the R executable
+and architecture doing the installation. The probe covers parser and XPath
+symbols and rejects libxml2 versions below 2.9.0. Failed configuration removes
+stale generated Makevars.win. No external libraries are downloaded by configure.
 
-## Reproduction and local evidence
+## Windows CI coverage
+
+The source-install workflow runs nine native configurations: R 4.2.3, R 4.3.3,
+current R x86_64 and current R ARM64, each with normal detection and deliberately
+unusable pkg-config; plus R 4.1.3 x86_64 with its optional Rtools40 libxml2 package.
+The no-pkg-config jobs assert that the direct-library fallback actually ran.
+Each installation is loaded and tested in a fresh R process. The Linux/current-R
+check job also runs the isolated configuration regression harness.
+
+The six Windows/Linux/macOS native release targets are retained. Publication is
+additionally gated on the Windows source-install checks. No release has been
+published and no hosted workflow execution is claimed here.
+
+## Evidence and reproduction
+
+The final package check is recorded in `validation/R-CMD-check.log` and
+`validation/R-CMD-check-0.3.1.log`. Windows configuration evidence is in
+`validation/windows-configure-0.3.1.log` and
+`validation/rtools45-metadata-0.3.1.json`. Historical validation records are
+retained in `validation/0.3.0-validation.md` and
+`validation/0.2.5-validation.md`.
+
+From the complete repository ZIP:
 
 ```sh
-Rscript --vanilla tools/checktor.R .
-Rscript --vanilla tools/check.R .
-Rscript --vanilla tools/diagnostics.R .
+python3 tools/ci/check-configure-win.py
+R CMD build .
+R CMD check --no-manual OECDdata_0.3.1.tar.gz
 ```
 
-The full check needs a working LaTeX installation; checktor spelling needs
-`aspell` or `hunspell`. Strict checktor execution is available with
-`OECDTEST_CHECKTOR_STRICT=1`. A partial manual-free check requires the explicit
-`OECDDATA_NO_MANUAL=true` switch and is labelled accordingly.
+On a native Windows runner with dependencies installed, the CI helper installs
+from source and verifies the loaded package without custom libxml2 flags.
 
-Local evidence is kept in `.qa/`, excluded from Git and the CRAN package:
-`final-tests.csv`, `finish-audit-final.log`, `http-integration-final.log`,
-`checktor-spelling-final.log`, `replay-live.log`, and
-`release-diagnostics/` (stage results, build, installation, coverage, lint,
-benchmark and R check logs). The lint audit reported style findings only;
-there were no lint warnings or errors. Coverage and benchmark results are
-recorded without treating them as proof of correctness or network performance.
+Primary references:
 
-Checktor is an additional tool, separate from the
-[CRAN policy](https://cran.r-project.org/web/packages/policies.html) and
-[R's package checks](https://cran.r-project.org/doc/manuals/r-release/R-exts.html).
-Its [severity and skipped-check reporting](https://r-pkg.thecoatlessprofessor.com/checktor/reference/checktor.html)
-are preserved in the local reports.
+* [R's Windows build guide](https://developer.r-project.org/WindowsBuilds/R-4.5/howto.html)
+  documents R_TOOLS_SOFT, LOCAL_SOFT and the pkg-config caveats.
+* [Official Rtools45 archives](https://cran.r-project.org/bin/windows/Rtools/rtools45/files/)
+  provide the actual static-library metadata inspected here.
+* [Rtools40 documentation](https://github.com/r-windows/docs/blob/master/rtools40.md)
+  describes the optional libxml2 package for legacy R.

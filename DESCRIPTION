@@ -1,7 +1,7 @@
 Package: OECDdata
 Type: Package
 Title: Fast and Friendly Access to OECD Data
-Version: 0.2.5
+Version: 0.3.1
 Authors@R: person("Alek", "Rutkowski", email = "alek.rutkowski@gmail.com",
     role = c("aut", "cre", "cph"))
 Description: Discover, describe, compare and import statistical datasets from
@@ -11,7 +11,8 @@ Description: Discover, describe, compare and import statistical datasets from
     discovery workflow of 'eurodata' to OECD-native names, catalogue-resolved
     short codes and dataset-scoped metadata. Uses SDMX REST version 2 by
     default, streamed downloads, native 'data.table' parsing, defensive
-    metadata resolution, caching and bounded HTTP retries. Includes an
+    bulk C XML extraction, indexed structural metadata resolution, caching
+    and bounded HTTP retries. Includes an
     explicit version 1 transport for interoperability.
 License: MIT + file LICENSE
 Encoding: UTF-8
@@ -23,7 +24,7 @@ VignetteBuilder: knitr
 Config/testthat/edition: 3
 URL: https://github.com/alekrutkowski/OECDdata
 Config/checktor/acronyms: OECD, SDMX, REST
-NeedsCompilation: no
-Packaged: 2026-10-20 08:32:20 UTC; CodexSandboxOffline
+SystemRequirements: libxml2 (>= 2.9.0)
+NeedsCompilation: yes
 Author: Alek Rutkowski [aut, cre, cph]
 Maintainer: Alek Rutkowski <alek.rutkowski@gmail.com>

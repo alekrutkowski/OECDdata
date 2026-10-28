@@ -105,4 +105,4 @@ clearCache <- function() {
 
 utils::globalVariables(c(".", ".SD", ".N", "Dim_name", "Dim_val", "Dim_values",
   "Dim_name_label", "Dim_val_label", "Code", "position", "kind", "id",
-  "agency", "version", "Version", "label", "value_", "flags_", "TIME_PERIOD"))
+  "agency", "version", "Agency", "Dataflow", "Version", "label", "value_", "flags_", "TIME_PERIOD"))

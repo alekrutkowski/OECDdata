@@ -62,3 +62,20 @@ The package adds catalogue-based shorthand resolution and a reserved
 that the OECD service accepts `CLI` as a universal resource identifier. The
 `prefix` selector matches the namespace before `@` in the dataflow ID; the
 referenced DSD is independently read from metadata. Aliases are not hard-coded.
+
+## Native XML and binary builds in 0.3.0
+
+Reviewed 28 October 2026 against primary documentation:
+
+- https://gnome.pages.gitlab.gnome.org/libxml2/html/parser_8h.html
+- https://gnome.pages.gitlab.gnome.org/libxml2/html/tree_8h.html
+- https://gnome.pages.gitlab.gnome.org/libxml2/html/xpath_8h.html
+- https://cran.r-project.org/doc/manuals/r-release/R-exts.html
+- https://search.r-project.org/R/refmans/utils/html/INSTALL.html
+- https://docs.github.com/en/actions/how-tos/write-workflows/choose-where-workflows-run/choose-the-runner-for-a-job
+- https://contributor.r-project.org/windows-arm64/
+- https://github.com/r-lib/actions/releases
+
+Native extraction and indexing are independent package-owned implementations
+using public libxml2 and R APIs. Benchmark results are local measurements,
+documented in PERFORMANCE.md, rather than performance claims from these sources.

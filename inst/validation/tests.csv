@@ -1,0 +1,91 @@
+"file","context","test","nb","failed","skipped","error","warning","user","system","real","passed"
+"test-compatibility.R","compatibility","the familiar workflow uses OECD-native names and expected defaults",17,0,FALSE,FALSE,0,0.189,0.00700000000000001,0.196,17
+"test-compatibility.R","compatibility","flat output retains familiar types, classes and metadata",10,0,FALSE,FALSE,0,0.0419999999999999,0.004,0.045,10
+"test-compatibility.R","compatibility","native data.table mode is opt-in and returns independent objects",3,0,FALSE,FALSE,0,0.025,0,0.024,3
+"test-compatibility.R","compatibility","labels and catalogue use the compatible columns and classes",8,0,FALSE,FALSE,0,0.077,0.004,0.073,8
+"test-compatibility.R","compatibility","metabase, describe and compare report marginal membership",15,0,FALSE,FALSE,0,0.117,0,0.117,15
+"test-compatibility.R","compatibility","wide descriptions handle comma-containing canonical OECD references",4,0,FALSE,FALSE,0,0.034,0,0.034,4
+"test-data.R","data","native CSV parsing retains values, flags and leading-zero identifiers",6,0,FALSE,FALSE,0,0.035,0,0.0349999999999999,6
+"test-data.R","data","scientific notation and missing measures are handled explicitly",3,0,FALSE,FALSE,0,0.015,0,0.015,3
+"test-data.R","data","response identity, observation keys and CSV schema are checked",4,0,FALSE,FALSE,0,0.0489999999999999,0,0.049,4
+"test-data.R","data","explicit HTTP 204 returns a typed empty frame, not an HTTP error",4,0,FALSE,FALSE,0,0.034,0,0.034,4
+"test-data.R","data","full import uses the correct parser and preserves download provenance",5,0,FALSE,FALSE,0,0.0330000000000001,0,0.0329999999999999,5
+"test-data.R","data","user fread return-type options cannot break the parser",2,0,FALSE,FALSE,0,0.016,0,0.016,2
+"test-dataset.R","dataset","bare dataflows, terminal IDs and compact short codes resolve",3,0,FALSE,FALSE,0,0.012,0,0.012,3
+"test-dataset.R","dataset","ambiguous short codes expose every candidate instead of choosing first",4,0,FALSE,FALSE,0,0.00900000000000012,0,0.0089999999999999,4
+"test-dataset.R","dataset","agency and prefix selectors are jointly required when appropriate",3,0,FALSE,FALSE,0,0.0199999999999998,0,0.0210000000000001,3
+"test-dataset.R","dataset","literal exact IDs precede aliases and terminal IDs precede compact codes",2,0,FALSE,FALSE,0,0.0109999999999999,0,0.0110000000000001,2
+"test-dataset.R","dataset","short codes are exact conventions, not fuzzy searches or legacy mappings",4,0,FALSE,FALSE,0,0.028,0,0.028,4
+"test-dataset.R","dataset","explicit historical versions are not filtered out by a current catalogue",4,0,FALSE,FALSE,0,0.0289999999999999,0,0.028,4
+"test-dataset.R","dataset","canonical references bypass the catalogue and reject conflicting selectors",6,0,FALSE,FALSE,0,0.034,0,0.0329999999999999,6
+"test-dataset.R","dataset","dataset-selector blocks are removed from dimension filters",4,0,FALSE,FALSE,0,0.0169999999999999,0,0.016,4
+"test-dataset.R","dataset","invalid selector blocks fail before metadata retrieval",10,0,FALSE,FALSE,0,0.12,0.011,0.132,10
+"test-dataset.R","dataset","reserved dataset selectors never appear in either transport's data query",10,0,FALSE,FALSE,0,0.12,0,0.0979999999999999,10
+"test-dataset.R","dataset","canonical and shorthand queries produce identical cache identities",3,0,FALSE,FALSE,0,0.054,0.00799999999999999,0.0449999999999999,3
+"test-dataset.R","dataset","metadata helpers accept the canonical reference from oecdDataset",6,0,FALSE,FALSE,0,0.177,0.013,0.125,6
+"test-dataset.R","dataset","full imports retain original selection and resolved identity separately",5,0,FALSE,FALSE,0,0.052,0.004,0.0450000000000002,5
+"test-dataset.R","dataset","catalogues advertise only unambiguous shorthand tokens",7,0,FALSE,FALSE,0,0.0990000000000002,0.00800000000000001,0.071,7
+"test-dataset.R","dataset","short codes do not acquire hidden country, frequency or measure defaults",4,0,FALSE,FALSE,0,0.0669999999999999,0,0.048,4
+"test-http.R","http","cache hits preserve download times and need no HTTP call",5,0,FALSE,FALSE,0,0.0390000000000001,0,0.038,5
+"test-http.R","http","offline mode ignores expiry but never ignores corruption",4,0,FALSE,FALSE,0,0.0420000000000003,0,0.042,4
+"test-http.R","http","expiry, refresh and response-language changes invalidate cache reuse",3,0,FALSE,FALSE,0,0.0259999999999998,0,0.026,3
+"test-http.R","http","transient failures retry and respect Retry-After",3,0,FALSE,FALSE,0,0.0169999999999999,0,0.0170000000000003,3
+"test-http.R","http","excessive Retry-After values fail without an early retry",3,0,FALSE,FALSE,0,0.016,0,0.016,3
+"test-http.R","http","HTTP dates and numeric Retry-After headers are supported",3,0,FALSE,FALSE,0,0.0209999999999999,0,0.0209999999999999,3
+"test-http.R","http","404 and other permanent errors are not silently returned as empty data",4,0,FALSE,FALSE,0,0.0190000000000001,0.002,0.0210000000000004,4
+"test-http.R","http","network failures retry only the configured number of times",2,0,FALSE,FALSE,0,0.0139999999999998,0,0.0140000000000002,2
+"test-http.R","http","HTML blocks, XML errors and oversized responses never enter the cache",4,0,FALSE,FALSE,0,0.024,0,0.024,4
+"test-http.R","http","clearCache only deletes owned cache entries",2,0,FALSE,FALSE,0,0.0130000000000003,0,0.0129999999999999,2
+"test-http.R","http","invalid parsed payloads can be evicted rather than poisoning cache hits",2,0,FALSE,FALSE,0,0.0169999999999999,0,0.0169999999999999,2
+"test-http.R","http","the local download budget is explicit and separate from metadata",2,0,FALSE,FALSE,0,0.00999999999999979,0,0.00999999999999979,2
+"test-live.R","live","the documented live v2 route imports a small monthly selection",1,0,TRUE,FALSE,0,0.00399999999999956,0,0.00300000000000011,0
+"test-native-xml.R","native-xml","bulk native catalogue extraction matches the independent xml2 oracle",18,0,FALSE,FALSE,0,0.234,0.001,0.17,18
+"test-native-xml.R","native-xml","native catalogue extraction excludes attachment references and rejects empty catalogues",2,0,FALSE,FALSE,0,0.016,0,0.0149999999999997,2
+"test-native-xml.R","native-xml","native document indexes preserve descendant order and subtree scope",5,0,FALSE,FALSE,0,0.012,0,0.0110000000000001,5
+"test-native-xml.R","native-xml","native localization preserves missing, empty and exact-language semantics",6,0,FALSE,FALSE,0,0.0150000000000001,0,0.0150000000000001,6
+"test-native-xml.R","native-xml","native text and attributes decode XML and preserve Unicode",7,0,FALSE,FALSE,0,0.0220000000000002,0,0.0220000000000002,7
+"test-native-xml.R","native-xml","native annotations retain first matches and prefer nonempty titles",4,0,FALSE,FALSE,0,0.0110000000000001,0,0.0110000000000001,4
+"test-native-xml.R","native-xml","bulk codelists preserve order, empty labels and leading zero identifiers",3,0,FALSE,FALSE,0,0.012,0,0.012,3
+"test-native-xml.R","native-xml","native reference extraction uses the first descendant and stable defaults",3,0,FALSE,FALSE,0,0.0139999999999998,0,0.0140000000000002,3
+"test-native-xml.R","native-xml","native and xml2 inputs produce the same structure and parsed observations",6,0,FALSE,FALSE,0,0.0640000000000001,0,0.0640000000000001,6
+"test-native-xml.R","native-xml","public imports use native metadata on downloads and raw-cache replays",11,0,FALSE,FALSE,0,0.089,0.004,0.069,11
+"test-native-xml.R","native-xml","missing local representations still resolve concept core dictionaries",2,0,FALSE,FALSE,0,0.0220000000000002,0,0.0220000000000002,2
+"test-native-xml.R","native-xml","native nodes retain their document after file cleanup and garbage collection",3,0,FALSE,FALSE,0,0.221,0,0.221,3
+"test-native-xml.R","native-xml","serialized native pointers are rejected instead of dereferenced",2,0,FALSE,FALSE,0,0.00800000000000001,0,0.00800000000000001,2
+"test-native-xml.R","native-xml","native parsing rejects malformed XML without poisoning later parses",6,0,FALSE,FALSE,0,0.02,0,0.0210000000000004,6
+"test-native-xml.R","native-xml","external entity declarations cannot disclose local files",3,0,FALSE,FALSE,0,0.0129999999999999,0,0.0139999999999998,3
+"test-query.R","query","v2 uses encoded component filters and an exact resolved version",6,0,FALSE,FALSE,0,0.0180000000000002,0,0.0180000000000002,6
+"test-query.R","query","v1 orders positional keys by the DSD, not by list order",3,0,FALSE,FALSE,0,0.0270000000000001,0,0.0259999999999998,3
+"test-query.R","query","query construction rejects ambiguous and malformed filters",12,0,FALSE,FALSE,0,0.052,0,0.0529999999999999,12
+"test-query.R","query","time bounds have one granularity and inclusive min/max semantics",8,0,FALSE,FALSE,0,0.0310000000000001,0,0.0310000000000001,8
+"test-query.R","query","the metadata query builder does not download observations",3,0,FALSE,FALSE,0,0.0179999999999998,0,0.0179999999999998,3
+"test-query.R","query","bare dataflow names resolve only when unique",6,0,FALSE,FALSE,0,0.052,0,0.0350000000000001,6
+"test-query.R","query","literal dots in codes are safe in v2 and rejected in v1 keys",2,0,FALSE,FALSE,0,0.0229999999999997,0,0.0180000000000002,2
+"test-query.R","query","v2 unrestricted queries have no accidental empty component selector",4,0,FALSE,FALSE,0,0.0289999999999999,0,0.028,4
+"test-regressions.R","regressions","dimension names do not require enumerated codes",2,0,FALSE,FALSE,0,0.0270000000000001,0,0.0270000000000001,2
+"test-regressions.R","regressions","qualified components take precedence over the default dataset",4,0,FALSE,FALSE,0,0.0640000000000001,0,0.0649999999999999,4
+"test-regressions.R","regressions","cache hits respect the current response size limit",3,0,FALSE,FALSE,0,0.0169999999999999,0,0.0169999999999999,3
+"test-regressions.R","regressions","malformed cache manifests are never returned as valid responses",8,0,FALSE,FALSE,0,0.0430000000000001,0,0.0429999999999997,8
+"test-regressions.R","regressions","XML exclusion booleans and key exclusions cannot invent availability",4,0,FALSE,FALSE,0,0.0619999999999998,0,0.0619999999999998,4
+"test-regressions.R","regressions","actual inventories can be described without any enumerated dictionaries",3,0,FALSE,FALSE,0,0.0389999999999997,0.001,0.04,3
+"test-regressions.R","regressions","unsupported CSV structure types cannot bypass identity validation",4,0,FALSE,FALSE,0,0.0390000000000001,0,0.0379999999999998,4
+"test-regressions.R","regressions","partial XML component positions cannot silently reorder v1 keys",2,0,FALSE,FALSE,0,0.0190000000000001,0,0.0190000000000001,2
+"test-regressions.R","regressions","latest versions are pinned before requesting partial references",2,0,FALSE,FALSE,0,0.0209999999999999,0,0.0209999999999999,2
+"test-regressions.R","regressions","CSV rows referring to the resolved DSD are accepted",1,0,FALSE,FALSE,0,0.0149999999999997,0,0.0150000000000001,1
+"test-regressions.R","regressions","libcurl size limits stop without retrying a deterministic failure",3,0,FALSE,FALSE,0,0.0120000000000005,0,0.012,3
+"test-search-options.R","search-options","find uses same-field AND, case-insensitive regex and minus exclusions",7,0,FALSE,FALSE,0,0.0220000000000002,0,0.0230000000000001,7
+"test-search-options.R","search-options","browse evaluates subset expressions in data plus the caller's environment",5,0,FALSE,FALSE,0,0.0549999999999997,0,0.0299999999999998,5
+"test-search-options.R","search-options","HTML reports escape text and do not activate non-HTTP links",5,0,FALSE,FALSE,0,0.0089999999999999,0,0.0089999999999999,5
+"test-search-options.R","search-options","options validate input and can be restored with base options",9,0,FALSE,FALSE,0,0.0409999999999999,0,0.0409999999999999,9
+"test-search-options.R","search-options","console printing returns the input invisibly",4,0,FALSE,FALSE,0,0.0340000000000003,0,0.0210000000000004,4
+"test-search-options.R","search-options","HTML descriptions keep benign formatting but never executable content",9,0,FALSE,FALSE,0,0.0169999999999999,0.004,0.0209999999999999,9
+"test-search-options.R","search-options","catalogue Explorer links specify OECD dissemination space",3,0,FALSE,FALSE,0,0.02,0,0.012,3
+"test-search-options.R","search-options","HTML previews survive the browser handoff until session cleanup",6,0,FALSE,FALSE,0,0.02,0,0.02,6
+"test-search-options.R","search-options","default session cache lives inside R's temporary directory",1,0,FALSE,FALSE,0,0.00499999999999989,0,0.00499999999999989,1
+"test-xml.R","xml","exact structure references and numeric versions are resolved",6,0,FALSE,FALSE,0,0.032,0,0.032,6
+"test-xml.R","xml","XML namespace prefixes do not determine parsing",2,0,FALSE,FALSE,0,0.016,0.00399999999999999,0.02,2
+"test-xml.R","xml","localized concept labels are preferred with English fallback",3,0,FALSE,FALSE,0,0.0249999999999995,0,0.0250000000000004,3
+"test-xml.R","xml","availability excludes codes only permitted by a dictionary",6,0,FALSE,FALSE,0,0.0219999999999994,0,0.0219999999999998,6
+"test-xml.R","xml","missing or conditional availability fails rather than inventing observations",3,0,FALSE,FALSE,0,0.0279999999999996,0,0.028,3
+"test-xml.R","xml","a missing DSD or dictionary never falls back to an arbitrary one",2,0,FALSE,FALSE,0,0.0120000000000005,0,0.012,2
+"test-xml.R","xml","dataset context and fully qualified dimensions resolve identically",3,0,FALSE,FALSE,0,0.0460000000000003,0,0.0459999999999998,3

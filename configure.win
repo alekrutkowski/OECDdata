@@ -1,0 +1,169 @@
+#!/bin/sh
+# Use the libraries belonging to the R installation that is doing the build.
+# pkg-config is optional: older Rtools releases do not provide a usable one.
+set -eu
+
+r_bin="${R_HOME}/bin${R_ARCH_BIN-}/R.exe"
+if [ ! -f "$r_bin" ]; then r_bin="${R_HOME}/bin/R.exe"; fi
+if [ ! -f "$r_bin" ]; then r_bin="${R_HOME}/bin/R"; fi
+
+trap 'rm -f conftest.c conftest.o conftest.so conftest.dll conftest.log' EXIT HUP INT TERM
+# A failed reconfiguration must not leave previously generated build flags.
+rm -f src/Makevars.win
+cat > conftest.c <<'EOF'
+#include <libxml/parser.h>
+#include <libxml/xpath.h>
+#if LIBXML_VERSION < 20900
+#error libxml2 2.9.0 or later is required
+#endif
+void oecd_xml_configure_test(void) {
+    xmlParserCtxtPtr parser = xmlNewParserCtxt();
+    xmlDocPtr doc = xmlCtxtReadMemory(parser, "<x/>", 4, NULL, NULL,
+                                    XML_PARSE_NONET);
+    xmlXPathContextPtr context = xmlXPathNewContext(doc);
+    xmlXPathObjectPtr result = xmlXPathEvalExpression(BAD_CAST "/*", context);
+    xmlXPathFreeObject(result);
+    xmlXPathFreeContext(context);
+    xmlFreeDoc(doc);
+    xmlFreeParserCtxt(parser);
+}
+EOF
+
+try_link() {
+    rm -f conftest.o conftest.dll
+    PKG_CPPFLAGS="$1 -DLIBXML_STATIC" PKG_LIBS="$2" \
+        "$r_bin" CMD SHLIB -o conftest.dll conftest.c >conftest.log 2>&1
+}
+
+try_pkg_config() {
+    if pc_cflags=$("$1" --cflags libxml-2.0 2>/dev/null) && \
+       pc_libs=$("$1" --static --libs libxml-2.0 2>/dev/null) && \
+       [ -n "$pc_libs" ]; then
+        printf '%s\n' "Checking libxml2 with $1"
+        if try_link "$pc_cflags" "$pc_libs"; then
+            xml_cflags=$pc_cflags
+            xml_libs=$pc_libs
+            return 0
+        fi
+        printf '%s\n' 'pkg-config flags did not compile and link; checking Rtools directly.'
+    fi
+    return 1
+}
+
+use_toolchain_root() {
+    # R may expose a Windows path with either slash convention.
+    candidate_root=$(printf '%s' "$1" | tr '\\' '/')
+    if [ -n "$candidate_root" ] && \
+       [ -f "$candidate_root/include/libxml2/libxml/parser.h" ] && \
+       [ -f "$candidate_root/lib/libxml2.a" ]; then
+        tools_root=$candidate_root
+        return 0
+    fi
+    return 1
+}
+
+# R selects the right architecture and runtime. Use that selection rather than
+# searching arbitrary installed toolchains on the machine.
+tools_root=
+if ! use_toolchain_root "${R_TOOLS_SOFT-}" && \
+   ! use_toolchain_root "${LOCAL_SOFT-}"; then
+    for variable in R_TOOLS_SOFT LOCAL_SOFT; do
+        configured_root=$("$r_bin" CMD config "$variable" 2>/dev/null) || configured_root=
+        if use_toolchain_root "$configured_root"; then break; fi
+    done
+fi
+if [ -z "$tools_root" ]; then
+    # Rtools40 has neither R_TOOLS_SOFT nor a default LOCAL_SOFT. Locate its
+    # libraries relative to the compiler selected by R, not another installed
+    # Rtools version. Normal CC is "gcc -m64" or "gcc -m32" in this toolchain.
+    configured_cc=$("$r_bin" CMD config CC 2>/dev/null) || configured_cc=
+    compiler=${configured_cc%% *}
+    if [ -n "$compiler" ]; then
+        compiler_path=$(command -v "$compiler" 2>/dev/null) || compiler_path=
+        if [ -n "$compiler_path" ]; then
+            use_toolchain_root "$(dirname "$(dirname "$compiler_path")")" || :
+        fi
+    fi
+fi
+if [ -z "$tools_root" ]; then
+    # Rtools40 also permits a quoted compiler prefix, or a wrapper in CC.
+    # Only legacy R uses this documented layout; a stale RTOOLS40_HOME must
+    # never select MSVCRT libraries for a newer UCRT R installation.
+    legacy_root=$("$r_bin" --vanilla --slave -e \
+        'if (getRversion() >= "4.0" && getRversion() < "4.2") {
+            root <- Sys.getenv("RTOOLS40_HOME", "c:/rtools40")
+            if (!nzchar(root)) root <- "c:/rtools40"
+            cat(file.path(root, if (.Machine$sizeof.pointer == 8L) "mingw64" else "mingw32"))
+        }' 2>/dev/null) || legacy_root=
+    use_toolchain_root "$legacy_root" || :
+fi
+
+static_libraries() {
+    # These are the dependencies in Rtools' libxml2 builds. The fallback also
+    # supports older builds without optional lzma/iconv/zlib features.
+    fallback_libs="-L\"$1\" -lxml2"
+    for dependency in lzma iconv z; do
+        if [ -f "$1/lib$dependency.a" ]; then
+            fallback_libs="$fallback_libs -l$dependency"
+        fi
+    done
+    fallback_libs="$fallback_libs -lm -lws2_32"
+}
+
+xml_cflags=${LIBXML_CFLAGS-}
+xml_libs=${LIBXML_LIBS-}
+found=no
+if [ -n "$xml_cflags$xml_libs${INCLUDE_DIR-}${LIB_DIR-}" ]; then
+    # Explicit flags have priority over automatic discovery.
+    if [ -z "$xml_cflags" ] && [ -n "${INCLUDE_DIR-}" ]; then
+        xml_cflags="-I\"${INCLUDE_DIR}\""
+    fi
+    if [ -z "$xml_libs" ] && [ -n "${LIB_DIR-}" ]; then
+        static_libraries "$LIB_DIR"
+        xml_libs=$fallback_libs
+    fi
+    if [ -z "$xml_libs" ]; then xml_libs=-lxml2; fi
+    printf '%s\n' 'Checking the supplied libxml2 flags'
+    if try_link "$xml_cflags" "$xml_libs"; then found=yes; fi
+else
+    # Respect an explicitly selected pkg-config. Otherwise prefer the one in
+    # R's toolchain over unrelated MSYS2/Strawberry Perl programs on PATH.
+    if [ -n "${PKG_CONFIG-}" ]; then
+        if try_pkg_config "$PKG_CONFIG"; then found=yes; fi
+    else
+        if [ -n "$tools_root" ] && \
+           try_pkg_config "$tools_root/bin/pkg-config"; then
+            found=yes
+        elif try_pkg_config pkg-config; then
+            found=yes
+        fi
+    fi
+    if [ "$found" = no ] && [ -n "$tools_root" ]; then
+        printf '%s\n' "Checking libxml2 directly in Rtools: $tools_root"
+        xml_cflags="-I\"$tools_root/include/libxml2\" -I\"$tools_root/include\""
+        static_libraries "$tools_root/lib"
+        xml_libs=$fallback_libs
+        if try_link "$xml_cflags" "$xml_libs"; then found=yes; fi
+    fi
+fi
+
+if [ "$found" = no ]; then
+    if [ -f conftest.log ]; then cat conftest.log; fi
+    cat <<'EOF'
+Cannot compile and link against libxml2 (>= 2.9.0) for this R installation.
+The checks used R's selected toolchain, optional pkg-config information,
+and a compiler/linker test; pkg-config itself is not required.
+Install the complete Rtools distribution matching this R installation.
+R 4.1/Rtools40 also needs its optional mingw-w64 libxml2 package.
+For custom libraries, supply LIBXML_CFLAGS and LIBXML_LIBS (including static
+dependencies), or INCLUDE_DIR and LIB_DIR, for the matching architecture.
+EOF
+    exit 1
+fi
+
+xml_cflags="$xml_cflags -DLIBXML_STATIC"
+printf '%s\n' "Using libxml2 flags: $xml_cflags" "Using libxml2 libraries: $xml_libs"
+cflags_escaped=$(printf '%s' "$xml_cflags" | sed 's/[\&|]/\\&/g')
+libs_escaped=$(printf '%s' "$xml_libs" | sed 's/[\&|]/\\&/g')
+sed -e "s|@xml_cflags@|$cflags_escaped|g" \
+    -e "s|@xml_libs@|$libs_escaped|g" src/Makevars.in > src/Makevars.win

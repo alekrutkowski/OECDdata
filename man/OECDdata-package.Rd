@@ -14,6 +14,10 @@ SDMX REST v2 is the default route. Observation payloads use SDMX-CSV 2 and
 structure payloads use SDMX-ML 2.1. The REST version and message version are
 independent. Version 1 routes are available by explicit option.
 
+XML metadata use bulk C extraction through libxml2, with document-level
+indexes for structural definitions. Observation CSV files use \pkg{data.table}.
+Source installation requires a C compiler and libxml2 development files.
+
 The package makes no requests and changes no options when loaded. Caching is
 session-local unless a directory is explicitly configured. Network examples
 are not run by ordinary checks. See the README for a worked tutorial, the

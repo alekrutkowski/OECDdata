@@ -46,7 +46,18 @@ def r_lex(text, name):
         i += 1
     require(not stack, f'{name}: unclosed delimiters {stack}')
 
-files = [f for f in root.rglob('*') if f.is_file()]
+def source_file(f):
+    if not f.is_file(): return False
+    relative = f.relative_to(root)
+    if any(part in {'.git', '.qa'} for part in relative.parts): return False
+    # Native builds leave object files and shared libraries next to C sources.
+    # They are verified by compilation/package checks, not UTF-8 lexical scans.
+    if relative.parts[0] == 'src' and (
+            f.suffix in {'.o', '.so', '.dll', '.dylib', '.a'} or
+            f.name in {'Makevars', 'Makevars.win'}): return False
+    return True
+
+files = [f for f in root.rglob('*') if source_file(f)]
 for f in files:
     text = f.read_text(encoding='utf-8')
     require('\x00' not in text, f'{f}: NUL byte')

@@ -27,11 +27,16 @@ records can be inspected with `utils::packageDescription()`.
 | curl | libcurl-backed HTTPS transfer, URL encoding and HTTP-date parsing | https://jeroen.r-universe.dev/curl |
 | digest | SHA-256 request identities and response checksums | https://eddelbuettel.github.io/digest/ |
 | magrittr | Functional pipe syntax | https://magrittr.tidyverse.org/ |
-| xml2 | libxml2-backed namespace-independent structure parsing | https://xml2.r-lib.org/ |
+| libxml2 | XML parsing, document ownership and XPath through its public C API; MIT licensed, maintained by the GNOME libxml2 contributors | https://gitlab.gnome.org/GNOME/libxml2 |
+| xml2 | HTML sanitization, XML fixture editing and the frozen benchmark reference | https://xml2.r-lib.org/ |
 | R utils | Package metadata, version comparison, browser/report utilities | https://www.r-project.org/ |
 
-`data.table` and the native libraries behind `curl` and `xml2` provide the native
-performance used by this package. No custom C, Rcpp or cpp11 extension is needed.
+The package-owned C extension uses R's registered `.Call` interface and links
+to libxml2. It does not use xml2's private pointer layout or any Rcpp/cpp11 code.
+libxml2 is not vendored; its source and license are available from
+https://gitlab.gnome.org/GNOME/libxml2/-/blob/master/Copyright .
+The frozen 0.2.5 XML implementation in `benchmarks/xml-reference-0.2.5.R` is
+this package's own MIT-licensed code and is used only by the explicit benchmark.
 
 ## Development and documentation dependencies
 

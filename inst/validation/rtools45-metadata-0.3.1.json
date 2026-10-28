@@ -1,0 +1,57 @@
+{
+  "official_archive": "https://cran.r-project.org/bin/windows/Rtools/rtools45/files/rtools45-toolchain-libs-full-6768.tar.zst",
+  "retrieved_range_bytes": [
+    0,
+    33554431
+  ],
+  "rtools_revision": "6768",
+  "libxml_version": "2.12.10",
+  "verified_static_lib_flags": [
+    "-lxml2",
+    "-lz",
+    "-liconv",
+    "-lm",
+    "-lws2_32",
+    "-llzma"
+  ],
+  "verified_cpp_flags": [
+    "-DLIBXML_STATIC",
+    "-DLZMA_API_STATIC"
+  ],
+  "method": "Read .pc metadata and pkg-config wrapper from bounded range of official Rtools archive, then evaluated metadata with Linux pkgconf. PE x86-64 static objects were independently inspected in the small libxml2 2.11.5 UCRT bundle used by xml2.",
+  "limitations": [
+    "No Windows compilation or runtime test performed.",
+    "No Windows compiler or Wine is installed in the workspace.",
+    "The inspected UCRT .a is libxml2 2.11.5, not the Rtools45 2.12.10 .a."
+  ],
+  "files": {
+    "official-rtools45-prefix/x86_64-w64-mingw32.static.posix/.version": {
+      "bytes": 5,
+      "sha256": "5dfa511a74bf81143ae0562c216fbacff4c208510f5c697c0dd9b79b890038df"
+    },
+    "official-rtools45-prefix/x86_64-w64-mingw32.static.posix/bin/pkg-config": {
+      "bytes": 875,
+      "sha256": "20e07db27ca95d74d200122a8c4065b7001c23663e89ecbe7adad41c1e22d73a"
+    },
+    "official-rtools45-prefix/x86_64-w64-mingw32.static.posix/lib/pkgconfig/libxml-2.0.pc": {
+      "bytes": 377,
+      "sha256": "30f4fedd6d31091c938d808a66183a1299b90a8b2c5417553680b67f2525ce0b"
+    },
+    "official-rtools45-prefix/x86_64-w64-mingw32.static.posix/lib/pkgconfig/liblzma.pc": {
+      "bytes": 396,
+      "sha256": "2e0890447415d64252d7a8748f27966422a8d2fc407fac18408e4b3e70a2dd7e"
+    },
+    "official-rtools45-prefix/x86_64-w64-mingw32.static.posix/lib/pkgconfig/iconv.pc": {
+      "bytes": 62,
+      "sha256": "59c1541c39fd3fb3b177db9a812781a0ef3a63533f17244c601c83f4b69b972f"
+    },
+    "official-rtools45-prefix/x86_64-w64-mingw32.static.posix/lib/pkgconfig/zlib.pc": {
+      "bytes": 296,
+      "sha256": "d3587f4a26c62fc0a17e531da37807b300b72f29814726e912e36ce6aa0b201c"
+    },
+    "official-rtools45-prefix/x86_64-w64-mingw32.static.posix/include/libxml2/libxml/xmlversion.h": {
+      "bytes": 9207,
+      "sha256": "54333181bebfbe84644d6d25533b927b287d85b543072b60c6296a4241584557"
+    }
+  }
+}

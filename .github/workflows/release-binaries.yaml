@@ -1,0 +1,186 @@
+name: Source and native binary releases
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A manual run on a branch produces downloadable Actions artifacts. A version
+# tag publishes only after all six native architectures pass their checks.
+concurrency:
+  group: release-binaries-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  OECDDATA_LIVE_TESTS: 'false'
+  GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  source:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    outputs:
+      r_version: ${{ steps.build.outputs.r_version }}
+      version: ${{ steps.build.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: release
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-pandoc@v2
+      - name: Install source-build system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxml2-dev libcurl4-openssl-dev libssl-dev pkg-config
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          needs: check
+      - name: Build the source archive once
+        id: build
+        run: Rscript tools/ci/release-build.R source
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-source
+          path: .qa/release-source/*.tar.gz
+          include-hidden-files: true
+          if-no-files-found: error
+
+  binaries:
+    needs: source
+    name: ${{ matrix.target }} / ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: windows-2022, target: windows, arch: x86_64}
+          - {os: windows-11-arm, target: windows, arch: arm64}
+          - {os: ubuntu-24.04, target: ubuntu-24.04, arch: x86_64}
+          - {os: ubuntu-24.04-arm, target: ubuntu-24.04, arch: arm64}
+          - {os: macos-15-intel, target: macos-15, arch: x86_64}
+          - {os: macos-15, target: macos-15, arch: arm64}
+    env:
+      OECD_BINARY_ARCH: ${{ matrix.arch }}
+      OECD_BINARY_TARGET: ${{ matrix.target }}
+      OECD_RELEASE_VERSION: ${{ needs.source.outputs.version }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/download-artifact@v8
+        with:
+          name: release-source
+          path: .qa/release-source
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ needs.source.outputs.r_version }}
+          use-public-rspm: true
+      - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxml2-dev libcurl4-openssl-dev libssl-dev pkg-config
+      - name: Configure macOS system libxml2
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          sdk_path=$(xcrun --show-sdk-path)
+          test -f "$sdk_path/usr/include/libxml2/libxml/parser.h"
+          echo "INCLUDE_DIR=$sdk_path/usr/include/libxml2" >> "$GITHUB_ENV"
+          echo "LIB_DIR=$sdk_path/usr/lib" >> "$GITHUB_ENV"
+      # setup-r installs the native Rtools distribution on Windows, including
+      # Rtools45-aarch64 for Windows ARM64. Never use an x86 DLL on that target.
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          needs: check
+      - name: Compile the binary package
+        run: Rscript tools/ci/release-build.R binary
+      - name: Reinstall and validate the binary in a fresh R process
+        run: Rscript tools/ci/release-build.R verify
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-${{ matrix.target }}-${{ matrix.arch }}
+          path: .qa/release-assets/*
+          include-hidden-files: true
+          if-no-files-found: error
+
+  windows-source-install:
+    needs: source
+    uses: ./.github/workflows/windows-source-install.yaml
+    with:
+      r_release: ${{ needs.source.outputs.r_version }}
+
+  publish:
+    needs: [source, binaries, windows-source-install]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      RELEASE_VERSION: ${{ needs.source.outputs.version }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: release-*
+          merge-multiple: true
+          path: release-assets
+      - name: Check the complete release and add checksums
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import os
+          from pathlib import Path
+
+          root = Path('release-assets')
+          archives = sorted(p for p in root.iterdir()
+                            if p.name.endswith(('.zip', '.tgz', '.tar.gz')))
+          if len(archives) != 7:
+              raise SystemExit(f'Expected one source and six binaries, found {len(archives)}')
+          for target in ('windows', 'ubuntu-24.04', 'macos-15'):
+              for arch in ('x86_64', 'arm64'):
+                  matches = [p for p in archives if f'_{target}_{arch}.' in p.name]
+                  if len(matches) != 1:
+                      raise SystemExit(f'Missing or duplicate binary: {target}/{arch}')
+          checksums = [f'{hashlib.sha256(p.read_bytes()).hexdigest()}  {p.name}'
+                       for p in sorted(root.iterdir()) if p.is_file()]
+          (root / 'SHA256SUMS').write_text('\n'.join(checksums) + '\n', encoding='utf-8')
+          notes = '''Native builds for Windows, Ubuntu 24.04 and macOS 15, each in x86_64 and ARM64.
+
+          Every binary was reinstalled, its compiled library architecture checked,
+          and its offline package tests and example run on the matching native runner.
+          Filenames include the R minor version and target platform. Build information
+          and dependency versions accompany each binary. SHA256SUMS covers the archives
+          and build information.
+
+          Choose the binary matching the architecture of R, which may differ from the
+          hardware architecture when R runs under emulation. Windows ARM64 uses the
+          community ARM64 R distribution and Rtools, not an x86_64 R installation.
+          Linux binaries target Ubuntu 24.04 and its system libraries; they are not
+          universal Linux binaries. macOS binaries link the system libxml2 library.
+          R package dependencies must be installed separately.
+
+          Install Windows/macOS binary archives with install.packages(path,
+          repos = NULL, type = "binary"). On matching Ubuntu systems use
+          R CMD INSTALL path-to-binary.tar.gz. The plain OECDdata_VERSION.tar.gz
+          archive is the portable source package and needs a C compiler and libxml2
+          development files when installed.
+          '''
+          notes = notes.replace('          ', '').replace('VERSION', os.environ['RELEASE_VERSION'])
+          Path('release-notes.md').write_text(notes, encoding='utf-8')
+          PY
+      - name: Publish all assets together
+        shell: bash
+        run: |
+          if gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" release-assets/* --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" release-assets/* \
+              --repo "$GITHUB_REPOSITORY" --verify-tag \
+              --title "OECDdata $RELEASE_VERSION" --notes-file release-notes.md
+          fi

@@ -1,0 +1,29 @@
+configure.win branch/quoting tests using mocked R and pkg-config.
+GNU make and shell expansion are real; this is not a Windows compilation test.
+test_compile_failure_removes_stale_makevars (__main__.ConfigureWinTests.test_compile_failure_removes_stale_makevars) ... ok
+test_compiler_relative_discovery_supports_rtools40 (__main__.ConfigureWinTests.test_compiler_relative_discovery_supports_rtools40) ... ok
+test_empty_pkg_config_libraries_use_toolchain_fallback (__main__.ConfigureWinTests.test_empty_pkg_config_libraries_use_toolchain_fallback) ... ok
+test_explicit_directories_preserve_spaces (__main__.ConfigureWinTests.test_explicit_directories_preserve_spaces) ... ok
+test_explicit_flags_override_discovery (__main__.ConfigureWinTests.test_explicit_flags_override_discovery) ... ok
+test_explicit_pkg_config_path_precedes_other_installations (__main__.ConfigureWinTests.test_explicit_pkg_config_path_precedes_other_installations) ... ok
+test_failed_cflags_query_uses_toolchain_fallback (__main__.ConfigureWinTests.test_failed_cflags_query_uses_toolchain_fallback) ... ok
+test_failed_libs_query_uses_toolchain_fallback (__main__.ConfigureWinTests.test_failed_libs_query_uses_toolchain_fallback) ... ok
+test_fallback_adds_only_present_static_dependencies (__main__.ConfigureWinTests.test_fallback_adds_only_present_static_dependencies) ... ok
+test_guarded_legacy_query_handles_quoted_compiler_prefix (__main__.ConfigureWinTests.test_guarded_legacy_query_handles_quoted_compiler_prefix) ... ok
+test_legacy_root_requires_guard_output_headers_and_archive (__main__.ConfigureWinTests.test_legacy_root_requires_guard_output_headers_and_archive) ... ok
+test_malformed_cc_does_not_block_explicit_flags (__main__.ConfigureWinTests.test_malformed_cc_does_not_block_explicit_flags) ... ok
+test_missing_dependency_has_actionable_failure (__main__.ConfigureWinTests.test_missing_dependency_has_actionable_failure) ... ok
+test_missing_pkg_config_uses_local_soft (__main__.ConfigureWinTests.test_missing_pkg_config_uses_local_soft) ... ok
+test_missing_pkg_config_uses_r_tools_soft (__main__.ConfigureWinTests.test_missing_pkg_config_uses_r_tools_soft) ... ok
+test_r_arch_bin_selects_the_architecture_specific_r (__main__.ConfigureWinTests.test_r_arch_bin_selects_the_architecture_specific_r) ... ok
+test_r_configuration_can_supply_toolchain_root (__main__.ConfigureWinTests.test_r_configuration_can_supply_toolchain_root) ... ok
+test_r_tools_soft_precedes_local_soft (__main__.ConfigureWinTests.test_r_tools_soft_precedes_local_soft) ... ok
+test_target_pkg_config_precedes_path_pkg_config (__main__.ConfigureWinTests.test_target_pkg_config_precedes_path_pkg_config) ... ok
+test_toolchain_paths_with_spaces_survive_make_and_shell (__main__.ConfigureWinTests.test_toolchain_paths_with_spaces_survive_make_and_shell) ... ok
+test_unlinkable_pkg_config_flags_use_toolchain_fallback (__main__.ConfigureWinTests.test_unlinkable_pkg_config_flags_use_toolchain_fallback) ... ok
+test_working_path_pkg_config_is_used (__main__.ConfigureWinTests.test_working_path_pkg_config_is_used) ... ok
+
+----------------------------------------------------------------------
+Ran 22 tests in 3.148s
+
+OK

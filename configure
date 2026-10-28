@@ -1,0 +1,54 @@
+#!/bin/sh
+# Locate libxml2 without downloading or modifying system libraries.
+set -eu
+
+xml_cflags=${LIBXML_CFLAGS-}
+xml_libs=${LIBXML_LIBS-}
+if [ -n "${INCLUDE_DIR-}" ] || [ -n "${LIB_DIR-}" ]; then
+    if [ -n "${INCLUDE_DIR-}" ]; then xml_cflags="-I${INCLUDE_DIR}"; fi
+    if [ -n "${LIB_DIR-}" ]; then xml_libs="-L${LIB_DIR} -lxml2"; fi
+elif [ -z "$xml_cflags$xml_libs" ]; then
+    if command -v pkg-config >/dev/null 2>&1 && pkg-config --exists libxml-2.0; then
+        xml_cflags=$(pkg-config --cflags libxml-2.0)
+        xml_libs=$(pkg-config --libs libxml-2.0)
+    elif command -v xml2-config >/dev/null 2>&1; then
+        xml_cflags=$(xml2-config --cflags)
+        xml_libs=$(xml2-config --libs)
+    else
+        xml_cflags="-I/usr/include/libxml2"
+        xml_libs="-lxml2"
+    fi
+fi
+if [ -z "$xml_libs" ]; then xml_libs="-lxml2"; fi
+
+printf '%s\n' "Using libxml2 flags: $xml_cflags" "Using libxml2 libraries: $xml_libs"
+# R CMD SHLIB uses R's selected compiler and architecture, including cross builds.
+trap 'rm -f conftest.c conftest.o conftest.so conftest.dylib conftest.dll conftest.log' EXIT HUP INT TERM
+cat > conftest.c <<'EOF'
+#include <libxml/parser.h>
+#if LIBXML_VERSION < 20900
+#error libxml2 2.9.0 or later is required
+#endif
+void oecd_xml_configure_test(void) {
+    xmlParserCtxtPtr parser = xmlNewParserCtxt();
+    xmlFreeParserCtxt(parser);
+}
+EOF
+if ! PKG_CPPFLAGS="$xml_cflags" PKG_LIBS="$xml_libs" \
+    "${R_HOME}/bin/R" CMD SHLIB conftest.c >conftest.log 2>&1; then
+    cat conftest.log
+    cat <<'EOF'
+Cannot compile and link against libxml2 (>= 2.9.0).
+Install libxml2 development files, for example libxml2-dev on Debian/Ubuntu
+or libxml2-devel on Fedora/RHEL. On macOS, install the Command Line Tools.
+For a custom installation, set LIBXML_CFLAGS and LIBXML_LIBS, or set
+INCLUDE_DIR to the directory containing libxml/ and LIB_DIR to its library directory.
+EOF
+    exit 1
+fi
+
+# The flags are data, not shell code. Escape sed's replacement metacharacters.
+cflags_escaped=$(printf '%s' "$xml_cflags" | sed 's/[\&|]/\\&/g')
+libs_escaped=$(printf '%s' "$xml_libs" | sed 's/[\&|]/\\&/g')
+sed -e "s|@xml_cflags@|$cflags_escaped|g" \
+    -e "s|@xml_libs@|$libs_escaped|g" src/Makevars.in > src/Makevars

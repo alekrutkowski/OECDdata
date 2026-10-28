@@ -1,0 +1,82 @@
+{
+  "date": "2026-10-28",
+  "package_old": "0.2.5",
+  "package_new": "0.3.0",
+  "environment": {
+    "R": "4.3.3",
+    "OS": "Ubuntu 24.04.3 LTS",
+    "architecture": "x86_64",
+    "libxml2": "2.9.14",
+    "data.table": "1.14.10",
+    "xml2": "1.3.6",
+    "curl": "5.2.0",
+    "data.table_threads": 4
+  },
+  "inputs": [
+    {
+      "name": "catalogue.xml",
+      "bytes": 8918674,
+      "sha256": "c4b4b51fb2346b100956c33144f6cd603bfe0957758cf15debadd8757911a816"
+    },
+    {
+      "name": "cli-structure.xml",
+      "bytes": 459074,
+      "sha256": "f5c30b47985020abfe1b9a41da751a3eaeb726fb11dedb7895ebf200a5a45c92"
+    },
+    {
+      "name": "cli.csv",
+      "bytes": 39640,
+      "sha256": "ceb05ea8847162d7196aa1d5e2d6c53bba0364f0c5011570ed6d3b8e1fff8f86"
+    }
+  ],
+  "xml_measurement": {
+    "repetitions": 3,
+    "network_included": false,
+    "file_read_and_tree_build_included": true,
+    "explicit_gc_before_each_run": true,
+    "same_results": true,
+    "baseline": "Unmodified 0.2.5 R/xml.R loaded in an isolated environment, with a complete untimed equivalence run before timing."
+  },
+  "public_import_measurement": {
+    "repetitions": 1,
+    "old_installed_package": true,
+    "new_installed_package": true,
+    "network_included": false,
+    "raw_cache_checksums_included": true,
+    "parsed_results_cached": false,
+    "identical_including_attributes": true,
+    "catalogue_rows": 1550,
+    "catalogue_columns": 14,
+    "observation_rows": 396,
+    "observation_columns": 16
+  },
+  "tests": {
+    "cases_total": 90,
+    "cases_executed": 89,
+    "assertions_passed": 428,
+    "failures": 0,
+    "errors": 0,
+    "warnings": 0,
+    "skips": 1,
+    "skip_reason": "Opt-in live network test disabled; real-response cache replay validated separately."
+  },
+  "package_check": {
+    "command": "R CMD check --no-manual OECDdata_0.3.0.tar.gz",
+    "status": "OK",
+    "errors": 0,
+    "warnings": 0,
+    "notes": 0,
+    "manual_checked": false,
+    "as_cran_incoming_checked": false
+  },
+  "native_binary_validation": {
+    "platform": "Ubuntu 24.04 x86_64",
+    "R": "4.3.3",
+    "source_build": true,
+    "binary_build": true,
+    "fresh_binary_reinstallation": true,
+    "architecture_verified": true,
+    "offline_tests_passed": 428,
+    "hosted_other_platform_jobs_run": false
+  }
+}

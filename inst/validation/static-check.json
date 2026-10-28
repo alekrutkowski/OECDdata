@@ -1,19 +1,17 @@
 {
   "status": "PASS",
   "package": "OECDdata",
-  "version": "0.2.5",
-  "review_date": "2026-10-20",
-  "r_implementation_files_parsed": 8,
+  "version": "0.3.1",
+  "r_files": 31,
   "exports": 16,
   "familiar_exports": 10,
   "manual_pages": 16,
   "documented_exports": 16,
   "public_signatures_compared": 16,
-  "test_cases_authored": 75,
-  "offline_test_cases_executed": 74,
-  "offline_assertions_passed": 347,
+  "test_cases_authored": 90,
   "live_test_cases": 1,
+  "documentation_r_blocks_checked": 51,
   "synthetic_rows": 12,
   "errors": [],
-  "scope": "R source parsing, offline runtime tests and public API audit on Windows R 4.6.1. Full release limitations are documented in VALIDATION.md."
+  "scope": "Static lexical/structural checks only. Not R parsing, package execution, R CMD check, or live API validation."
 }

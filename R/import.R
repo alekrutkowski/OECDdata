@@ -95,7 +95,7 @@ importData <- function(OECDDatasetCode, filters = NULL) {
 #' Load a small synthetic example without any network access
 #' @export
 oecdExample <- function() {
-  doc <- xml2::read_xml(system.file("extdata", "structure.xml", package = "OECDdata"), options = "NONET")
+  doc <- .read_xml(system.file("extdata", "structure.xml", package = "OECDdata"))
   s <- .parse_structure(doc, list(agency = "TEST", id = "DEMO", version = "1.0"))
   .parse_data(system.file("extdata", "example.csv", package = "OECDdata"), s) %>%
     .finish_data(s, "TEST,DEMO,1.0", list(time = as.POSIXct("2024-01-01", tz = "UTC"),
